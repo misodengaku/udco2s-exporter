@@ -39,7 +39,7 @@ func main() {
 		Help: "Humidity",
 	})
 	tempGauge := promauto.NewGauge(prometheus.GaugeOpts{
-		Name: "udco2s_temperature_concentration",
+		Name: "udco2s_temperature",
 		Help: "Temperature",
 	})
 
