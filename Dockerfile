@@ -1,14 +1,14 @@
-FROM golang:1.20 AS builder
+FROM golang:1.25 AS builder
 WORKDIR /opt
 ADD go.mod /opt/
 ADD go.sum /opt/
 RUN go mod download
 ADD udco2s /opt/udco2s
 ADD udco2s-exporter.go /opt/
-RUN CGO_ENABLED=0 go build
+RUN CGO_ENABLED=0 go build && strip udco2s-exporter
 
-FROM alpine:3
+FROM scratch
 WORKDIR /opt
 COPY --from=builder /opt/udco2s-exporter /opt/udco2s-exporter
 ENV LISTEN_ADDR=0.0.0.0:9999
-ENTRYPOINT /opt/udco2s-exporter
+ENTRYPOINT ["/opt/udco2s-exporter"]
