@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"time"
@@ -46,21 +46,22 @@ func main() {
 	go func() {
 		// promhttp
 		http.Handle("/metrics", promhttp.Handler())
-		log.Println(http.ListenAndServe(config.PromHTTPListenAddr, nil))
+		err := http.ListenAndServe(config.PromHTTPListenAddr, nil)
+		slog.Error("failed to serve HTTP", "error", err)
 	}()
 
 	device := udco2s.UDCO2S{}
-	err = device.Init(context.Background(), config.TTY)
+	err = device.Init(config.TTY)
 	if err != nil {
 		panic(err)
 	}
-	device.StartMeasurement()
-	log.Println("udco2s-exporter is running")
+	_ = device.StartMeasurement(context.Background())
+	slog.Info("udco2s-exporter is running")
 
 	for {
-		co2Gauge.Set(float64(device.CO2))
-		humGauge.Set(device.Humidity)
-		tempGauge.Set(device.Temperature)
+		co2Gauge.Set(float64(device.GetCO2Value()))
+		humGauge.Set(device.GetHumidityValue())
+		tempGauge.Set(device.GetTemperatureValue())
 		time.Sleep(1 * time.Second)
 	}
 }
